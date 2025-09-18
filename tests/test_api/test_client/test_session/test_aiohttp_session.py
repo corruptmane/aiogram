@@ -10,6 +10,7 @@ from typing import (
 )
 from unittest.mock import AsyncMock, patch
 
+from aiogram.methods.base import Response
 import aiohttp_socks
 import pytest
 from aiohttp import ClientError
@@ -183,6 +184,31 @@ class TestAiohttpSession:
             call = TestMethod()
 
             result = await session.make_request(bot, call)
+            assert isinstance(result, Response)
+            assert isinstance(result.result, int)
+            assert result.result == 42
+
+    async def test_session_call(self, bot: MockedBot, aresponses: ResponsesMockServer):
+        aresponses.add(
+            aresponses.ANY,
+            "/bot42:TEST/method",
+            "post",
+            aresponses.Response(
+                status=200,
+                text='{"ok": true, "result": 42}',
+                headers={"Content-Type": "application/json"},
+            ),
+        )
+
+        async with AiohttpSession() as session:
+
+            class TestMethod(TelegramMethod[int]):
+                __returning__ = int
+                __api_method__ = "method"
+
+            call = TestMethod()
+
+            result = await session(bot, call)
             assert isinstance(result, int)
             assert result == 42
 
