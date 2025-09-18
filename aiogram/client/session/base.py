@@ -151,7 +151,7 @@ class BaseSession(abc.ABC):
         bot: Bot,
         method: TelegramMethod[TelegramType],
         timeout: Optional[int] = None,
-    ) -> TelegramType:  # pragma: no cover
+    ) -> Response[TelegramType]:  # pragma: no cover
         """
         Make request to Telegram Bot API
 
@@ -251,7 +251,7 @@ class BaseSession(abc.ABC):
         timeout: Optional[int] = None,
     ) -> TelegramType:
         middleware = self.middleware.wrap_middlewares(self.make_request, timeout=timeout)
-        return cast(TelegramType, await middleware(bot, method))
+        return cast(TelegramType, (await middleware(bot, method)).result)
 
     async def __aenter__(self) -> BaseSession:
         return self

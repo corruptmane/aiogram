@@ -25,7 +25,7 @@ from aiogram.__meta__ import __version__
 from aiogram.methods import TelegramMethod
 
 from ...exceptions import TelegramNetworkError
-from ...methods.base import TelegramType
+from ...methods.base import Response, TelegramType
 from ...types import InputFile
 from .base import BaseSession
 
@@ -167,7 +167,7 @@ class AiohttpSession(BaseSession):
 
     async def make_request(
         self, bot: Bot, method: TelegramMethod[TelegramType], timeout: Optional[int] = None
-    ) -> TelegramType:
+    ) -> Response[TelegramType]:
         session = await self.create_session()
 
         url = self.api.api_url(token=bot.token, method=method.__api_method__)
@@ -182,10 +182,10 @@ class AiohttpSession(BaseSession):
             raise TelegramNetworkError(method=method, message="Request timeout error")
         except ClientError as e:
             raise TelegramNetworkError(method=method, message=f"{type(e).__name__}: {e}")
-        response = self.check_response(
+
+        return self.check_response(
             bot=bot, method=method, status_code=resp.status, content=raw_result
         )
-        return cast(TelegramType, response.result)
 
     async def stream_content(
         self,
